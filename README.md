@@ -1,0 +1,85 @@
+# @jeryfan/ai
+
+Unified LLM API for browser and frontend environments. Talk to OpenAI, Anthropic, Google, Mistral, OpenRouter, and other providers through one consistent interface.
+
+```bash
+npm install @jeryfan/ai
+```
+
+## Features
+
+- **Browser-first**: no Node-only dependencies, no OAuth flows, no local HTTP servers.
+- **API-key only**: every request is authenticated with an explicit API key.
+- **Unified interface**: one `AssistantMessage` / `AssistantMessageEvent` model across providers.
+- **Streaming**: text deltas, thinking deltas, tool-call deltas, and completion events.
+- **Multi-provider**: register built-in providers or define your own OpenAI-compatible endpoints.
+
+## Quick start
+
+```ts
+import { builtinModels } from "@jeryfan/ai";
+
+const models = builtinModels();
+const model = models.getModel("anthropic", "claude-haiku-4-5")!;
+
+const stream = models.stream(
+  model,
+  {
+    messages: [{ role: "user", content: "Hello!", timestamp: Date.now() }],
+  },
+  {
+    apiKey: "your-api-key",
+  },
+);
+
+for await (const event of stream) {
+  if (event.type === "text_delta") {
+    process.stdout.write(event.delta);
+  }
+}
+
+const result = await stream.result();
+```
+
+## Custom OpenAI-compatible endpoint
+
+```ts
+import { createModels, createProvider } from "@jeryfan/ai";
+import { stream, streamSimple } from "@jeryfan/ai/api/openai-completions";
+
+const models = createModels();
+
+models.setProvider(
+  createProvider({
+    id: "my-proxy",
+    name: "My OpenAI Proxy",
+    auth: { apiKey: { name: "API Key", resolve: async () => undefined } },
+    models: [
+      {
+        id: "gpt-4",
+        name: "GPT-4",
+        api: "openai-completions",
+        provider: "my-proxy",
+        baseUrl: "https://my-proxy.example.com/v1",
+        reasoning: false,
+        input: ["text"],
+        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+        contextWindow: 128000,
+        maxTokens: 4096,
+      },
+    ],
+    api: { stream, streamSimple },
+  }),
+);
+```
+
+## Entry points
+
+- `@jeryfan/ai` – core types and helpers.
+- `@jeryfan/ai/compat` – deprecated global `stream()` / `complete()` API.
+- `@jeryfan/ai/providers/*` – individual provider factories.
+- `@jeryfan/ai/api/*` – individual protocol implementations.
+
+## License
+
+MIT
