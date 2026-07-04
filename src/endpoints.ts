@@ -63,8 +63,8 @@ export interface EndpointConfig {
 	 * concrete protocol implementation to dispatch requests.
 	 */
 	provider: string;
-	/** Custom API endpoint URL. */
-	baseUrl: string;
+	/** Custom API endpoint URL. If omitted, built-in models keep their default baseUrl. */
+	baseUrl?: string;
 	/** API key for this endpoint. */
 	apiKey: string;
 	/**
@@ -136,15 +136,20 @@ export function createModelsWithEndpoints(configs: readonly EndpointConfig[]): M
 
 		const builtInClones: Model<Api>[] = allowedModels.map((m) => ({
 			...m,
-			baseUrl: cfg.baseUrl,
+			baseUrl: cfg.baseUrl ?? m.baseUrl,
 			provider: cfg.id,
 		}));
 
-		const customModels: Model<Api>[] = (cfg.customModels ?? []).map((m) => ({
-			...createCustomModel(m),
-			baseUrl: cfg.baseUrl,
-			provider: cfg.id,
-		}));
+		const customModels: Model<Api>[] = (cfg.customModels ?? []).map((m) => {
+			if (!cfg.baseUrl) {
+				throw new Error(`baseUrl is required for endpoint "${cfg.id}" when customModels are provided`);
+			}
+			return {
+				...createCustomModel(m),
+				baseUrl: cfg.baseUrl,
+				provider: cfg.id,
+			};
+		});
 
 		const allModels = [...builtInClones, ...customModels];
 

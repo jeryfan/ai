@@ -77,6 +77,8 @@ models.setProvider(
 
 For frontend apps where users configure providers through a settings UI, use `createModelsWithEndpoints` to clone the built-in model catalog and apply custom `baseUrl` / `apiKey`:
 
+`baseUrl` is optional. When omitted, built-in models keep their default endpoint URLs.
+
 ```ts
 import { createModelsWithEndpoints } from "@jeryfan/ai";
 
@@ -90,7 +92,6 @@ const models = createModelsWithEndpoints([
   {
     id: "anthropic-prod",
     provider: "anthropic",
-    baseUrl: "https://api.anthropic.com",
     apiKey: "sk-ant-...",
     modelIds: ["claude-haiku-4-5", "claude-sonnet-4-5"],
   },
@@ -104,7 +105,7 @@ const selected = models.getModel("anthropic-prod", "claude-sonnet-4-5")!;
 const stream = models.stream(selected, context);
 ```
 
-You can also add custom models that are not in the built-in catalog by providing `customModels`. Each custom model only needs `id`, `name`, `api`, `contextWindow`, and `maxTokens`:
+You can also add custom models that are not in the built-in catalog by providing `customModels` and a `baseUrl`:
 
 ```ts
 import { createModelsWithEndpoints } from "@jeryfan/ai";

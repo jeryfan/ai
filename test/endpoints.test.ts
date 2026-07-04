@@ -75,6 +75,41 @@ describe("createModelsWithEndpoints", () => {
 		expect(models.getModel("custom-only", "custom-1")).toBeDefined();
 	});
 
+	it("uses built-in baseUrl when baseUrl is omitted", () => {
+		const models = createModelsWithEndpoints([
+			{
+				id: "kimi-default",
+				provider: "kimi-coding",
+				apiKey: "key",
+				modelIds: ["kimi-for-coding"],
+			},
+		]);
+
+		const model = models.getModel("kimi-default", "kimi-for-coding")!;
+		expect(model.baseUrl).toBe("https://api.kimi.com/coding");
+	});
+
+	it("throws when customModels are provided without baseUrl", () => {
+		expect(() =>
+			createModelsWithEndpoints([
+				{
+					id: "custom-no-baseurl",
+					provider: "openai",
+					apiKey: "key",
+					customModels: [
+						{
+							id: "custom-1",
+							name: "Custom One",
+							api: "openai-completions",
+							contextWindow: 1000,
+							maxTokens: 100,
+						},
+					],
+				},
+			]),
+		).toThrow('baseUrl is required for endpoint "custom-no-baseurl" when customModels are provided');
+	});
+
 	it("merges custom models with built-in clones", () => {
 		const models = createModelsWithEndpoints([
 			{
