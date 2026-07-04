@@ -104,6 +104,34 @@ const selected = models.getModel("anthropic-prod", "claude-sonnet-4-5")!;
 const stream = models.stream(selected, context);
 ```
 
+You can also add custom models that are not in the built-in catalog by providing `customModels`. Each custom model only needs `id`, `name`, `api`, `contextWindow`, and `maxTokens`:
+
+```ts
+import { createModelsWithEndpoints } from "@jeryfan/ai";
+
+const models = createModelsWithEndpoints([
+  {
+    id: "my-openai-proxy",
+    provider: "openai",
+    baseUrl: "https://my-proxy.example.com/v1",
+    apiKey: "sk-...",
+    modelIds: ["gpt-4o"],
+    customModels: [
+      {
+        id: "my-custom-model",
+        name: "My Custom Model",
+        api: "openai-completions",
+        contextWindow: 128000,
+        maxTokens: 4096,
+      },
+    ],
+  },
+]);
+
+// Both built-in clones and custom models appear in the list
+const allModels = models.getModels();
+```
+
 ## Entry points
 
 - `@jeryfan/ai` – core types and helpers.

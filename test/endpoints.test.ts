@@ -53,6 +53,58 @@ describe("createModelsWithEndpoints", () => {
 		).toThrow("Unknown provider: not-a-real-provider");
 	});
 
+	it("supports endpoint with only custom models", () => {
+		const models = createModelsWithEndpoints([
+			{
+				id: "custom-only",
+				provider: "openai",
+				baseUrl: "https://custom.example.com/v1",
+				apiKey: "key",
+				customModels: [
+					{
+						id: "custom-1",
+						name: "Custom One",
+						api: "openai-completions",
+						contextWindow: 1000,
+						maxTokens: 100,
+					},
+				],
+			},
+		]);
+
+		expect(models.getModel("custom-only", "custom-1")).toBeDefined();
+	});
+
+	it("merges custom models with built-in clones", () => {
+		const models = createModelsWithEndpoints([
+			{
+				id: "openai-mix",
+				provider: "openai",
+				baseUrl: "https://api.openai.com/v1",
+				apiKey: "key",
+				modelIds: ["gpt-4o"],
+				customModels: [
+					{
+						id: "custom-gpt",
+						name: "Custom GPT",
+						api: "openai-completions",
+						contextWindow: 128000,
+						maxTokens: 4096,
+					},
+				],
+			},
+		]);
+
+		const list = models.getModels("openai-mix");
+		expect(list.some((m) => m.id === "gpt-4o")).toBe(true);
+		expect(list.some((m) => m.id === "custom-gpt")).toBe(true);
+
+		const custom = models.getModel("openai-mix", "custom-gpt")!;
+		expect(custom.baseUrl).toBe("https://api.openai.com/v1");
+		expect(custom.provider).toBe("openai-mix");
+		expect(custom.input).toEqual(["text"]);
+	});
+
 	it("exposes all models when modelIds is omitted", () => {
 		const models = createModelsWithEndpoints([
 			{
